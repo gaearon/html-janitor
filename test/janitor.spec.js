@@ -6,8 +6,11 @@ define([ 'html-janitor' ], function (HTMLJanitor) {
       tags: {
         b: {},
         p: { foo: true, bar: 'baz' },
+        ol: 'ul',
         ul: {},
-        li: {}
+        li: {},
+        h1: { doge: 'wow' },
+        h2: 'h1'
       }
 
 
@@ -36,6 +39,20 @@ define([ 'html-janitor' ], function (HTMLJanitor) {
       var p = document.createElement('p');
       div.appendChild(p);
       expect(janitor.clean(div.outerHTML)).toBe('<p></p>');
+    });
+
+    it('should rewrite tag names', function () {
+      var ol = document.createElement('ol');
+      var li = document.createElement('li');
+      li.innerText = 'Hello';
+      ol.appendChild(li);
+      expect(janitor.clean(ol.outerHTML)).toBe('<ul><li>Hello</li></ul>');
+    });
+
+    it('should consider target element rules when rewriting tag names', function () {
+      var h2 = document.createElement('h2');
+      h2.setAttribute('doge', 'wow');
+      expect(janitor.clean(h2.outerHTML)).toBe('<h1 doge="wow"></h1>');
     });
 
     it('should not keep the inner text of a script element', function () {

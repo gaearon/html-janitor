@@ -34,7 +34,7 @@
 
     do {
       var nodeName = node.nodeName.toLowerCase();
-      var allowedAttrs = this.config.tags[nodeName];
+      var tagConfig = this.config.tags[nodeName];
 
       // Ignore nodes that have already been sanitized
       if (node._sanitized) {
@@ -65,6 +65,19 @@
         break;
       }
 
+      // Support rewriting tag names
+      if (typeof tagConfig === 'string') {
+        var newNode = document.createElement(tagConfig);
+        for (var i = 0; i < node.attributes.length; i++) {
+          newNode.setAttribute(node.attributes[i].name, node.attributes[i].value);
+        }
+        newNode.innerHTML = node.innerHTML;
+
+        parentNode.replaceChild(newNode, node);
+        this._sanitize(parentNode);
+        break;
+      }
+
       var isInlineElement = nodeName === 'b';
       var containsBlockElement;
       if (isInlineElement) {
@@ -85,7 +98,7 @@
 
       // Drop tag entirely according to the whitelist *and* if the markup
       // is invalid.
-      if (!this.config.tags[nodeName] || isInvalid || isNestedBlockElement) {
+      if (!tagConfig || isInvalid || isNestedBlockElement) {
         // Do not keep the inner text of SCRIPT/STYLE elements.
         if (! (node.nodeName === 'SCRIPT' || node.nodeName === 'STYLE')) {
           while (node.childNodes.length > 0) {
@@ -104,7 +117,7 @@
         var attrName = attr.name.toLowerCase();
 
         // Allow attribute?
-        var allowedAttrValue = allowedAttrs[attrName];
+        var allowedAttrValue = tagConfig[attrName];
         var notInAttrList = ! allowedAttrValue;
         var valueNotAllowed = allowedAttrValue !== true && attr.value !== allowedAttrValue;
         if (notInAttrList || valueNotAllowed) {
